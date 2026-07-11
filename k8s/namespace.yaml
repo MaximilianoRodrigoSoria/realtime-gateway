@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: realtime-gateway
+  labels:
+    app.kubernetes.io/name: realtime-gateway
+    app.kubernetes.io/managed-by: kubectl
