@@ -44,9 +44,24 @@ Java 21 · WebSocket · STOMP · Redis · PostgreSQL · Gradle · Flyway · Dock
 
 Organizado por **feature** en capas `domain -> application -> infrastructure`, con la regla de dependencia verificada por ArchUnit. La logica de negocio (dominio y casos de uso) no depende de framework ni de infraestructura; los adaptadores (web, persistencia, mensajeria) implementan puertos definidos por la aplicacion.
 
+## API
+
+REST (contexto `/realtime-gateway/api/v1`) + WebSocket STOMP (endpoint `/ws`). La identidad llega en `X-User-Id` (REST) / cabecera `userId` del CONNECT (WebSocket); en un deploy real se deriva del JWT.
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| `POST` | `/rooms` | Crear sala (el creador queda OWNER) |
+| `GET`  | `/rooms` | Listar salas |
+| `POST` | `/rooms/{id}/join` · `/leave` | Membresia |
+| `GET`  | `/rooms/{id}/members` | Miembros con estado de presencia |
+| `POST` | `/rooms/{id}/messages` | Publicar mensaje (persiste y difunde) |
+| `GET`  | `/rooms/{id}/messages` | Historial paginado |
+
+Tiempo real: STOMP en `/app/rooms/{id}/send` → difunde en `/topic/rooms/{id}`.
+
 ## Estado
 
-🚧 En planificacion / arranque. El diseno detallado (epicas, historias y criterios de aceptacion) vive en el plan del portafolio.
+✅ Nucleo funcional implementado: salas (crear/unirse/salir/miembros), mensajes persistentes e historial, presencia (en memoria), y tiempo real con **STOMP/WebSocket** (config, handshake autenticado, controller de mensajes, broadcast). Persistencia JPA/PostgreSQL + migracion Flyway, tests (unit + Testcontainers). Como capa siguiente para escalar: **backplane Redis Pub/Sub** (el core usa SimpleBroker) y presencia con TTL/heartbeat en Redis. La feature `example` del scaffold se conserva como referencia.
 
 ---
 

@@ -184,3 +184,9 @@ resilience4j:
         timeout-duration: 0s
         # Registrar métricas en Actuator
         register-health-indicator: true
+      rooms-api:
+        # Rate limit del API de salas: 50 req/s
+        limit-for-period: 50
+        limit-refresh-period: 1s
+        timeout-duration: 0s
+        register-health-indicator: true

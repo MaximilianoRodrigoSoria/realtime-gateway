@@ -4,6 +4,8 @@ import com.ar.laboratory.realtimegateway.example.domain.exception.ExampleAlready
 import com.ar.laboratory.realtimegateway.example.domain.exception.ExampleNotFoundException;
 import com.ar.laboratory.realtimegateway.shared.infrastructure.exception.BadRequestException;
 import com.ar.laboratory.realtimegateway.shared.infrastructure.exception.InfrastructureException;
+import com.ar.laboratory.realtimegateway.chat.domain.exception.NotRoomMemberException;
+import com.ar.laboratory.realtimegateway.chat.domain.exception.RoomNotFoundException;
 import com.ar.laboratory.realtimegateway.shared.infrastructure.logging.MdcFilter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import java.time.LocalDateTime;
@@ -80,6 +82,20 @@ public class GlobalExceptionHandler {
                         .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(RoomNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRoomNotFound(
+            RoomNotFoundException ex, WebRequest request) {
+        log.warn("RoomNotFoundException: {}", ex.getMessage());
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(NotRoomMemberException.class)
+    public ResponseEntity<ErrorResponse> handleNotRoomMember(
+            NotRoomMemberException ex, WebRequest request) {
+        log.warn("NotRoomMemberException: {}", ex.getMessage());
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -168,6 +184,21 @@ public class GlobalExceptionHandler {
                         .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    /** Construye una respuesta de error estándar. */
+    private ResponseEntity<ErrorResponse> build(
+            HttpStatus status, String message, WebRequest request) {
+        ErrorResponse errorResponse =
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(status.value())
+                        .error(status.getReasonPhrase())
+                        .message(message)
+                        .path(getPath(request))
+                        .traceId(generateTraceId())
+                        .build();
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     private String getPath(WebRequest request) {
